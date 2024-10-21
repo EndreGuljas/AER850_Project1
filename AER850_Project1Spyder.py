@@ -27,12 +27,12 @@ pd.set_option('display.max_columns', None)
 print(step_stats_XYZ)
 print(df.groupby('Step')['Y'].unique())
 
-# Creating figure with a specified size (also adding a 3D subplot)
+# Creating figure with a specified size 
 fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(111, projection='3d')
 plt.title("3D Scatter Plot")
 
-# Creating  3D scatter plot using the coordinate columns from df
+# Creating 3D scatter plot using the coordinate columns from dataframe 
 scatter = ax.scatter(df['X'], df['Y'], df['Z'], c=df['Step'], cmap='viridis', alpha=0.7)
 
 # Setting the labels for the X, Y and Z axes
@@ -48,15 +48,15 @@ plt.show()
 
 import seaborn as sns
 
-# Compute correlation matrix
+# Computting correlation matrix
 data_for_matrix = df[['X', 'Y', 'Z', 'Step']]
 
-#Calculate and display correlation maxtrix using "Pearson" correlation
+#Calculating and display correlation maxtrix using "Pearson" correlation
 correlation_matrix = data_for_matrix.corr(method='pearson')
 print("Correlation Matrix:")
 print(correlation_matrix)
 
-# Display the correlation matrix using heatmap
+# Displaying the correlation matrix using heatmap
 plt.figure(figsize=(8, 6))
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5, fmt='.2f')
 plt.title("Correlation Heatmap of X, Y, Z relating to Step")
@@ -77,10 +77,6 @@ sets = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
 for train_index, test_index in sets.split(X, y):
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-
-# Checking the distribution of steps in training/testing sets
-print(f"Training data shape: {X_train.shape}\n")
-print(f"Testing data shape: {X_test.shape}\n")
 
 # Combing through data to ensure no missing values
 print(df.isnull().sum()) 
@@ -125,7 +121,7 @@ print(f"Decision Tree Parameters: {random_search_dt.best_params_}\n")
 
 from sklearn.metrics import accuracy_score, precision_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
 
-# Comparing performance of models based on accuracy, precision, and F1 score
+# Comparing performance of models based on accuracy, precision, and f1 score
 models = {
     'Logistic Regression': grid_log_reg,
     'Random Forest': grid_rf,
@@ -138,19 +134,21 @@ for name, model in models.items():
     print(f"Model: {name}\n")
     print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}\n")
     print(f"Precision: {precision_score(y_test, y_pred, average='weighted'):.4f}\n")
-    print(f"F1 Score: {f1_score(y_test, y_pred, average='weighted'):.4f}")
+    print(f"F1 score: {f1_score(y_test, y_pred, average='weighted'):.4f}\n")
  
-    # Plot confusion matrix
-    conf_matrix = confusion_matrix(y_test, y_pred)
-    ConfusionMatrixDisplay(conf_matrix).plot()
-    plt.title(f"Confusion Matrix for {name}")
+ # Plotting confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+    plt.figure(figsize = (6, 4))
+    sns.heatmap(cm, annot = True, fmt = 'd', cmap = 'Blues')
+    plt.title(f'{name} Confusion Matrix')
+    plt.ylabel('Actual Label')
+    plt.xlabel('Predicted Label')
     plt.show()
        
 ''' Step #6: Stacked Model Performance Analysis'''
 
 import numpy as np
 from sklearn.ensemble import StackingClassifier
-from sklearn.model_selection import cross_validate
 
 # Defining base estimators using the best estimators from previous models
 base_estimators = [
@@ -160,7 +158,7 @@ base_estimators = [
 
 final_estimator = LogisticRegression(max_iter=1000)
 
-# Create StackingClassifier
+# Creating StackingClassifier
 stacking_clf = StackingClassifier(
     estimators=base_estimators,
     final_estimator=final_estimator,
@@ -168,38 +166,25 @@ stacking_clf = StackingClassifier(
 )
 
 # Fitting stacking classifier on scaled training data
-print("Fitting Stacking Classifier...")
 stacking_clf.fit(X_train_scaled, y_train)
-print("Stacking Classifier trained successfully.")
 
 # Evaluating stacked model
 y_pred_stacked = stacking_clf.predict(X_test_scaled)
 
-# Model performance metrics
-print(f"Stacked Classifier Accuracy: {accuracy_score(y_test, y_pred_stacked):.4f}\n")
-print(f"Stacked Classifier Precision: {precision_score(y_test, y_pred_stacked, average='weighted'):.4f}\n")
-print(f"Stacked Classifier F1 Score: {f1_score(y_test, y_pred_stacked, average='weighted'):.4f}\n")
+# Modelling performance metrics
+print(f"Stacked Classifier accuracy: {accuracy_score(y_test, y_pred_stacked):.4f}\n")
+print(f"Stacked Classifier precision: {precision_score(y_test, y_pred_stacked, average='weighted'):.4f}\n")
+print(f"Stacked Classifier f1 Score: {f1_score(y_test, y_pred_stacked, average='weighted'):.4f}\n")
 
-# Plot confusion matrix for stacked classifier
+# Plotting confusion matrix for Stacked Classifier
 conf_matrix_stacked = confusion_matrix(y_test, y_pred_stacked)
-disp_stacked = ConfusionMatrixDisplay(conf_matrix_stacked)
-disp_stacked.plot(cmap=plt.cm.Blues)
+plt.figure(figsize=(6, 4))  
+sns.heatmap(conf_matrix_stacked, annot=True, fmt='d', cmap='Blues')
 plt.title("Confusion Matrix for Stacked Classifier")
+plt.ylabel('Actual Label')
+plt.xlabel('Predicted Label')
 plt.show()
 
-# Cross-validation of stacked model with multiple metrics
-print("Running cross-validation...")
-cv_results = cross_validate(
-    stacking_clf, X_train_scaled, y_train, cv=5,
-    scoring=['accuracy', 'precision_weighted', 'recall_weighted', 'f1_weighted']
-)
-
-# Display cross-validation results
-print("Cross-Validation Results:")
-print(f"Accuracy: {np.mean(cv_results['test_accuracy']):.2f}\n")
-print(f"Precision: {np.mean(cv_results['test_precision_weighted']):.2f}\n")
-print(f"Recall: {np.mean(cv_results['test_recall_weighted']):.2f}\n")
-print(f"F1-Score: {np.mean(cv_results['test_f1_weighted']):.2f}\n")
 
 ''' Step #7: Model Evaluation'''
 
@@ -208,27 +193,21 @@ import joblib
 # Saving stacked classifier model
 model_filename = 'stacked_classifier_model.joblib'
 joblib.dump(stacking_clf, model_filename)
-print(f"Model saved as {model_filename}")
+print(f"Model saved as {model_filename}\n")
 
 # Loading the saved model
 loaded_model = joblib.load(model_filename)
-print("Model loaded successfully.")
 
 # Defining new coordinates to predict maintenance steps
-new_coordinates = np.array([[9.375, 3.0625, 1.51],
-                            [6.995, 5.125, 0.3875],
-                            [0, 3.0625, 1.93],
-                            [9.4, 3, 1.8],
-                            [9.4, 3, 1.3]])
+random_coordinates = np.array([[9.375, 3.0625, 1.51], [6.995, 5.125, 0.3875], [0, 3.0625, 1.93], [9.4, 3, 1.8], [9.4, 3, 1.3]])
 
-# Scaling the new data using same scaler used for training data
-new_coordinates_scaled = scaler.transform(new_coordinates)
+# Scaling the new data 
+random_coordinates_scaled = scaler.transform(random_coordinates)
 
-# Predicting maintenance steps using loaded model
-predicted_steps = loaded_model.predict(new_coordinates_scaled)
+# Predicting maintenance steps 
+predicted_steps = loaded_model.predict(random_coordinates_scaled)
 
 # Displaying predictions for each set of coordinates
-for i, coords in enumerate(new_coordinates):
-    print(f"Coordinates: {coords} -> Predicted Maintenance Step: {predicted_steps[i]}")
+for i, coords in enumerate(random_coordinates):
+    print(f"Coordinates: {coords} ===> Predicted maintenance step: {predicted_steps[i]}\n")
 
-    
